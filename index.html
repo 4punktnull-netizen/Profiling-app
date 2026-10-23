@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AGH MAE Profiling-Assistent (Jobcenter Berlin Neukölln)</title>
+    <style>
+        :root {
+            --primary-color: #003366;
+            --secondary-color: #0056b3;
+            --bg-color: #f4f6f9;
+            --card-bg: #ffffff;
+            --text-color: #212529;
+            --border-color: #ced4da;
+            --success-color: #28a745;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 15px;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        header {
+            border-bottom: 3px solid var(--primary-color);
+            padding-bottom: 12px;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            font-size: 22px;
+            margin: 0 0 5px 0;
+        }
+
+        .subtitle {
+            font-size: 13px;
+            color: #6c757d;
+            font-weight: 500;
+        }
+
+        .api-config {
+            background-color: #e9ecef;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 12px 10px;
+            border: 1px solid var(--border-color);
+            background-color: #f8f9fa;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease-in-out;
+            color: var(--primary-color);
+        }
+
+        .tab-btn.active {
+            background-color: var(--primary-color);
+            color: #ffffff;
+            border-color: var(--primary-color);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        label {
+            display: block;
+            font-weight: 700;
+            margin-bottom: 6px;
+            font-size: 14px;
+            color: #333;
+        }
+
+        input[type="text"], input[type="password"], textarea, select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        textarea {
+            height: 110px;
+            resize: vertical;
+        }
+
+        .output-area {
+            height: 220px;
+            background-color: #f8f9fa;
+            font-size: 14px;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        button.action-btn {
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-size: 14px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            flex: 1;
+        }
+
+        button.action-btn:hover {
+            background-color: var(--primary-color);
+        }
+
+        button.export-btn {
+            background-color: var(--success-color);
+        }
+
+        button.export-btn:hover {
+            background-color: #218838;
+        }
+
+        .status-msg {
+            margin-top: 12px;
+            font-size: 13px;
+            font-weight: bold;
+            padding: 10px;
+            border-radius: 6px;
+            display: none;
+        }
+
+        .status-msg.info { display: block; background-color: #d1ecf1; color: #0c5460; }
+        .status-msg.success { display: block; background-color: #d4edda; color: #155724; }
+        .status-msg.error { display: block; background-color: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>AGH MAE Profiling-Assistent</h1>
+        <div class="subtitle">Fachaufsichten-Zuarbeit &amp; Entwicklungsdokumentation (Jobcenter Berlin Neukölln)</div>
+    </header>
+
+    <div class="api-config">
+        <label for="apiKey">Gemini API-Schlüssel:</label>
+        <input type="password" id="apiKey" value="AQ.Ab8RN6LRUIJyUXDdfv5pR_ZdVw47jueKEVQjq_bjVCYsnMDePw" onchange="saveApiKey()">
+    </div>
+
+    <div class="nav-tabs">
+        <button class="tab-btn active" onclick="switchTab('eg', event)">Modul 1: Erstgespräch (EG)</button>
+        <button class="tab-btn" onclick="switchTab('fg', event)">Modul 2: Folgegespräch (FG)</button>
+        <button class="tab-btn" onclick="switchTab('tnb', event)">Modul 3: Beurteilung (TNB)</button>
+    </div>
+
+    <div class="form-group">
+        <label for="tnNummer">Teilnehmer-Nummer (100 % DSGVO-Anonymisierung):</label>
+        <input type="text" id="tnNummer" placeholder="Format z. B. TN-2024-01" value="TN-2024-01">
+    </div>
+
+    <!-- MODUL 1 -->
+    <div id="eg" class="tab-content active">
+        <div class="form-group">
+            <label for="eg_notes">Praxis-Notizen Erstgespräch (Stärken 50+, Vermittlungshemmnisse, Handlungsbedarfe):</label>
+            <textarea id="eg_notes" placeholder="Stichpunkte z. B.: Langjährige Erfahrung im Handwerk, Motivation zur Tagesstruktur hoch, gesundheitliche Einschränkungen beim Heben schwerer Lasten..."></textarea>
+        </div>
+        <div class="btn-group">
+            <button class="action-btn" onclick="generateText('eg')">Text mit KI generieren</button>
+        </div>
+        <div class="form-group" style="margin-top: 15px;">
+            <label for="eg_out">Ausformulierter Text für Formular (EG &amp; SMART-Zielvereinbarung):</label>
+            <textarea id="eg_out" class="output-area"></textarea>
+        </div>
+    </div>
+
+    <!-- MODUL 2 -->
+    <div id="fg" class="tab-content">
+        <div class="form-group">
+            <label for="fg_status">Bisherige Vereinbarungen erreicht?</label>
+            <select id="fg_status">
+                <option value="Ja">Ja, vollständig erreicht</option>
+                <option value="Teilweise">Teilweise erreicht</option>
+                <option value="Nein">Nein, noch nicht erreicht</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="fg_notes">Praxis-Notizen Folgegespräch (Entwicklungsverlauf, Problemlagen, Trägerunterstützung):</label>
+            <textarea id="fg_notes" placeholder="Stichpunkte z. B.: Pünktlichkeit und Tagesstruktur sehr stabil, gute Integration im Team..."></textarea>
+        </div>
+        <div class="btn-group">
+            <button class="action-btn" onclick="generateText('fg')">Text mit KI generieren</button>
+        </div>
+        <div class="form-group" style="margin-top: 15px;">
+            <label for="fg_out">Ausformulierter Verlaufsbericht (FG &amp; Folgeschritte):</label>
+            <textarea id="fg_out" class="output-area"></textarea>
+        </div>
+    </div>
+
+    <!-- MODUL 3 -->
+    <div id="tnb" class="tab-content">
+        <div class="form-group">
+            <label for="tnb_notes">Praxis-Notizen Beurteilung (Beobachtungen für die 4 Freitextbereiche):</label>
+            <textarea id="tnb_notes" placeholder="Stichpunkte z. B.: Sehr sorgfältig in der Grünflächenpflege, hilfsbereit gegenüber Kollegen..."></textarea>
+        </div>
+        <div class="btn-group">
+            <button class="action-btn" onclick="generateText('tnb')">Text mit KI generieren</button>
+        </div>
+        <div class="form-group" style="margin-top: 15px;">
+            <label for="tnb_out">Ausformulierte Text-Zuarbeit (4 Bereiche: Begabung, Stärken/Schwächen, Fazit, Empfehlungen):</label>
+            <textarea id="tnb_out" class="output-area"></textarea>
+        </div>
+    </div>
+
+    <div id="status" class="status-msg"></div>
+    <div class="btn-group" style="margin-top: 20px;">
+        <button class="action-btn export-btn" onclick="exportToWord()">Als Word-Datei (.doc) speichern</button>
+    </div>
+</div>
+
+<script>
+    const SYSTEM_PROMPT = `Du agierst als erfahrener Fachanleiter in einer Arbeitsgelegenheit mit Mehraufwandsentschädigung (AGH MAE nach § 16d SGB II).
+Deine Aufgabe ist es, aus stichpunktartigen Beobachtungen behördengerechte, lösungsorientierte und wertschätzende Absätze für die Profiling-Dokumentation (Jobcenter Berlin Neukölln) zu formulieren.
+
+Verbindliche Leitlinien:
+1. Datenschutz: NIEMALS Klarnamen verwenden. Nutze ausschließlich die angegebene TN-Nummer oder neutrale Formulierungen wie "die teilnehmende Person".
+2. Zielgruppe 50+: Berücksichtige die Lebensrealität (über 50 Jahre, langzeitarbeitslos, multiple Vermittlungshemmnisse). Würdige vorhandene Lebens- und Berufserfahrungen und stärke die Motivation durch soziale Teilhabe.
+3. Tonalität: Sachlich, pädagogisch-beobachtend, lösungsorientiert und behördengerecht.
+4. SMART-Prinzip: Formuliere Ziele kleinteilig (Aufgaben TN / Aufgaben Träger) ohne starre Terminangaben (stattdessen "im Berichtszeitraum" oder "kontinuierlich").
+5. Gib direkt den ausformulierten Fließtext ohne Einleitung oder Begrüßung aus.`;
+
+    document.addEventListener("DOMContentLoaded", function() {
+        const savedKey = localStorage.getItem("gemini_api_key");
+        if (savedKey) {
+            document.getElementById("apiKey").value = savedKey;
+        }
+    });
+
+    function saveApiKey() {
+        const key = document.getElementById("apiKey").value.trim();
+        localStorage.setItem("gemini_api_key", key);
+    }
+
+    function switchTab(tabId, event) {
+        document.querySelectorAll('.tab-btn').forEach(function(btn) { btn.classList.remove('active'); });
+        document.querySelectorAll('.tab-content').forEach(function(content) { content.classList.remove('active'); });
+        event.target.classList.add('active');
+        document.getElementById(tabId).classList.add('active');
+    }
+
+    function showStatus(message, type) {
+        const statusDiv = document.getElementById("status");
+        statusDiv.className = "status-msg " + type;
+        statusDiv.innerText = message;
+    }
+
+    async function generateText(moduleType) {
+        const apiKey = document.getElementById("apiKey").value.trim();
+        const tnNummer = document.getElementById("tnNummer").value.trim() || "TN-0000";
+
+        if (!apiKey) {
+            showStatus("Bitte gib zuerst deinen API-Schlüssel ein!", "error");
+            return;
+        }
+
+        let inputNotes = "";
+        let outputField = null;
+        let modulePrompt = "";
+
+        if (moduleType === 'eg') {
+            inputNotes = document.getElementById("eg_notes").value;
+            outputField = document.getElementById("eg_out");
+            modulePrompt = "Modul: Erstgespräch (EG)\nTN-Nummer: " + tnNummer + "\nPraxis-Notizen: " + inputNotes + "\n\nFormuliere präzise Absätze für: Persönliche Stärken (50+), Vermittlungshemmnisse, Handlungsbedarfe und eine kleinteilige SMART-Zielvereinbarung (Aufgaben TN / Aufgaben Träger / Berichtszeitraum).";
+        } else if (moduleType === 'fg') {
+            const status = document.getElementById("fg_status").value;
+            inputNotes = document.getElementById("fg_notes").value;
+            outputField = document.getElementById("fg_out");
+            modulePrompt = "Modul: Folgegespräch (FG)\nTN-Nummer: " + tnNummer + "\nBisherige Ziele erreicht: " + status + "\nPraxis-Notizen: " + inputNotes + "\n\nFormuliere präzise Absätze für: Verlaufsdokumentation, Entwicklung der Tagesstruktur/sozialen Integration, individuelle Problemlagen sowie Unterstützung/Aktivierungsmaßnahmen des Trägers.";
+        } else if (moduleType === 'tnb') {
+            inputNotes = document.getElementById("tnb_notes").value;
+            outputField = document.getElementById("tnb_out");
+            modulePrompt = "Modul: Vorbereitung Teilnehmerbeurteilung (TNB) für das Jobcenter Berlin Neukölln\nTN-Nummer: " + tnNummer + "\nPraxis-Notizen: " + inputNotes + "\n\nFormuliere strukturierte Textbausteine für folgende 4 Bereiche:\n1. Begabungsschwerpunkte (fachlich & sozial)\n2. Stärken-/Schwächenanalyse (Arbeits- und Sozialverhalten)\n3. Abschluss-Fazit & Entwicklungsbeobachtung (Aufgabenfeld passend, Sprachpraxis ohne Handlungsbedarf)\n4. Empfehlungen zur weiteren Integrationsplanung (z. B. § 16d / § 16k SGB II).";
+        }
+
+        if (!inputNotes.trim()) {
+            alert("Bitte gib zuerst einige Stichpunkte in das Notizfeld ein!");
+            return;
+        }
+
+        showStatus("Text wird generiert...", "info");
+
+        try {
+            const endpoint = "[suspicious link removed]" + encodeURIComponent(apiKey);
+            
+            const response = await fetch(endpoint, {
+                method: "POST",
+                headers: { 
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    contents: [{
+                        parts: [
+                            { text: SYSTEM_PROMPT + "\n\n" + modulePrompt }
+                        ]
+                    }]
+                })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                const errMsg = (data && data.error && data.error.message) ? data.error.message : ("HTTP Fehler " + response.status);
+                throw new Error(errMsg);
+            }
+
+            let generatedText = null;
+            if (data && data.candidates && data.candidates.length > 0) {
+                const candidate = data.candidates[0];
+                if (candidate && candidate.content && candidate.content.parts && candidate.content.parts.length > 0) {
+                    generatedText = candidate.content.parts[0].text;
+                }
+            }
+
+            if (generatedText) {
+                outputField.value = generatedText.trim();
+                showStatus("Text erfolgreich generiert!", "success");
+            } else {
+                throw new Error("Antwort enthält keinen Text.");
+            }
+        } catch (error) {
+            console.error(error);
+            showStatus("Fehler bei der Verbindung: " + error.message, "error");
+        }
+    }
+
+    function exportToWord() {
+        const tnNummer = document.getElementById("tnNummer").value.trim() || "TN-0000";
+        const egText = document.getElementById("eg_out").value;
+        const fgText = document.getElementById("fg_out").value;
+        const tnbText = document.getElementById("tnb_out").value;
+        const datum = new Date().toLocaleDateString("de-DE");
+
+        let content = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='[suspicious link removed]'>" +
+            "<head><meta charset='utf-8'><title>Profiling-Zuarbeit</title>" +
+            "<style>body { font-family: Arial, sans-serif; font-size: 11pt; line-height: 1.4; color: #333; }" +
+            "h2 { color: #003366; border-bottom: 2px solid #003366; padding-bottom: 5px; }" +
+            "h3 { color: #0056b3; margin-top: 20px; }" +
+            ".meta-box { background-color: #f8f9fa; padding: 10px; border: 1px solid #ddd; margin-bottom: 20px; }" +
+            "p { text-align: justify; }</style></head><body>" +
+            "<h2>AGH MAE Profiling-Zuarbeit (Fachaufsicht)</h2>" +
+            "<div class='meta-box'><strong>TN-Nummer:</strong> " + tnNummer + "<br/><strong>Erstellungsdatum:</strong> " + datum + "<br/><strong>Rechtskreis:</strong> § 16d SGB II (Jobcenter Berlin Neukölln)</div>" +
+            "<h3>Modul 1: Erstgespräch (EG) &amp; Zielvereinbarung</h3><p>" + (egText ? egText.replace(/\n/g, '<br/>') : '<i>Kein Text generiert</i>') + "</p>" +
+            "<h3>Modul 2: Folgegespräch (FG) &amp; Entwicklungsverlauf</h3><p>" + (fgText ? fgText.replace(/\n/g, '<br/>') : '<i>Kein Text generiert</i>') + "</p>" +
+            "<h3>Modul 3: Vorbereitung Teilnehmerbeurteilung (TNB - Freitextfelder)</h3><p>" + (tnbText ? tnbText.replace(/\n/g, '<br/>') : '<i>Kein Text generiert</i>') + "</p>" +
+            "</body></html>";
+
+        const blob = new Blob(['\ufeff' + content], { type: 'application/msword' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = "Profiling_Zuarbeit_" + tnNummer + ".doc";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+</script>
+</body>
+</html>
