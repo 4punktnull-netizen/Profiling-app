@@ -324,6 +324,7 @@ Verbindliche Leitlinien:
         showStatus("Text wird generiert...", "info");
 
         try {
+            // Aktualisierter Modellname gemini-1.5-flash
             const endpoint = "[suspicious link removed]" + encodeURIComponent(apiKey);
             
             const response = await fetch(endpoint, {
@@ -340,7 +341,14 @@ Verbindliche Leitlinien:
                 })
             });
 
-            const data = await response.json();
+            const rawText = await response.text();
+            let data = null;
+
+            try {
+                data = JSON.parse(rawText);
+            } catch (e) {
+                throw new Error("Antwort von Google war kein gültiges JSON. Bitte API-Schlüssel prüfen.");
+            }
 
             if (!response.ok) {
                 const errMsg = (data && data.error && data.error.message) ? data.error.message : ("HTTP Fehler " + response.status);
@@ -359,7 +367,7 @@ Verbindliche Leitlinien:
                 outputField.value = generatedText.trim();
                 showStatus("Text erfolgreich generiert!", "success");
             } else {
-                throw new Error("Antwort enthält keinen Text.");
+                throw new Error("Schnittstelle hat keinen Text zurückgegeben.");
             }
         } catch (error) {
             console.error(error);
